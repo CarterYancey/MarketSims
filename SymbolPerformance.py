@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import seaborn
 import pandas as pd
 
-symbols = ["BA", "LUV", "NFLX", "AMD", "LMT", "SPOT", "CBRL", "SAFM", "HAS", "INTC", "ATVI", "AMZN", "CSCO"]
+#symbols = ["BA", "LUV", "NFLX", "AMD", "LMT", "SPOT", "CBRL", "SAFM", "HAS", "INTC", "ATVI", "AMZN", "CSCO"]
+symbols = [line.rstrip('\n') for line in open("Dow30.txt")]
 data_df = yf.download(tickers=symbols, period='1y', interval='1d', rounding='True')
 data_df = data_df['Close']
 size = len(data_df)
