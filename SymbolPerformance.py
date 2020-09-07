@@ -11,8 +11,8 @@ size = len(data_df)
 fifteenDayAVG = []
 thirtyDayAVG = []
 sixMonthAVG = []
-onSale = [] #less than 1 means the share price is lower than its 15-day mean
-discounted = []
+priceTo15dma = [] #less than 1 means the share price is lower than its 15-day mean
+priceTo30dma = [] #less than 1 means the share price is lower than its 30-day mean
 shortTermBear = [] #True if the 15-day mean is under the 30-day mean
 longTermBear = [] #True if the 15-day mean is under the 6-month mean
 
@@ -21,14 +21,14 @@ for sym in symbols:
     thirtyDayAVG.append(data_df[size-30:][sym].mean())
     sixMonthAVG.append(data_df[size-180:][sym].mean())
     sharePrice = data_df[sym][size-1]
-    onSale.append(sharePrice / fifteenDayAVG[-1])
-    discounted.append(sharePrice / thirtyDayAVG[-1])
+    priceTo15dma.append(sharePrice / fifteenDayAVG[-1])
+    priceTo30dma.append(sharePrice / thirtyDayAVG[-1])
     shortTermBear.append(fifteenDayAVG[-1] < thirtyDayAVG[-1])
     longTermBear.append(fifteenDayAVG[-1] < sixMonthAVG[-1])
     
 #Create dataframe from the information calculated above    
-results = {'Sale ratio': pd.Series(onSale, index=symbols),
-           'Discount': pd.Series(discounted, index=symbols),
+results = {'Sale ratio': pd.Series(priceTo15dma, index=symbols),
+           'Discount': pd.Series(priceTo30dma, index=symbols),
 	   'ShortBear': pd.Series(shortTermBear, index=symbols),
 	   'LongBear': pd.Series(longTermBear, index=symbols)}
 results = pd.DataFrame(results).sort_values('Sale ratio')
