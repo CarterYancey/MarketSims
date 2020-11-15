@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 symbols = [line.rstrip('\n') for line in open("Dow30.txt")]
+apikey=""
+#directory=""
+
 try:
     # For Python 3.0 and later
     from urllib.request import urlopen
@@ -27,8 +30,8 @@ def get_jsonparsed_data(url):
     return data_json
 
 for symbol in symbols:
-    annual = ("https://financialmodelingprep.com/api/v3/balance-sheet-statement/"+symbol+"?limit=120&apikey=***REMOVED***")
-    quarterly = ("https://financialmodelingprep.com/api/v3/balance-sheet-statement/"+symbol+"?period=quarter&limit=6&apikey=***REMOVED***")
+    annual = ("https://financialmodelingprep.com/api/v3/balance-sheet-statement/"+symbol+"?limit=120&apikey="+apikey)
+    quarterly = ("https://financialmodelingprep.com/api/v3/balance-sheet-statement/"+symbol+"?period=quarter&limit=6&apikey="+apikey)
     #print(get_jsonparsed_data(url))
     annual_json = get_jsonparsed_data(annual)
     quarterly_json = get_jsonparsed_data(quarterly)
