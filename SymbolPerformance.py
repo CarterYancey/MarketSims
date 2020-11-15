@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import seaborn
 import pandas as pd
 
-symbols = [line.rstrip('\n') for line in open("Dow30.txt")]
+pd.set_option("display.max_rows", None, "display.max_columns", None)
+
+symbols = [line.rstrip('\n') for line in open("C:/Users/carte/MarketSims/Dow/Dow30.txt")]
 data_df = yf.download(tickers=symbols, period='9mo', interval='1d', rounding='True')
 data_df = data_df['Close']
 size = len(data_df)
@@ -27,8 +29,8 @@ for sym in symbols:
     priceTo180dma.append(sharePrice / sixMonthAVG[-1])
     shortTermBear.append(fifteenDayAVG[-1] / thirtyDayAVG[-1])
     longTermBear.append(fifteenDayAVG[-1] / sixMonthAVG[-1])
-    
-#Create dataframe from the information calculated above    
+
+#Create dataframe from the information calculated above
 results = {'Sale ratio': pd.Series(priceTo15dma, index=symbols),
            'Discount': pd.Series(priceTo30dma, index=symbols),
            'Dip': pd.Series(priceTo180dma, index=symbols),
@@ -36,4 +38,3 @@ results = {'Sale ratio': pd.Series(priceTo15dma, index=symbols),
 	   'OldBear': pd.Series(longTermBear, index=symbols)}
 results = pd.DataFrame(results).sort_values('Sale ratio')
 print(results)
-
