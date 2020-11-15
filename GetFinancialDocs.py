@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-symbols = [line.rstrip('\n') for line in open("Dow30.txt")]
-apikey="cb7330bc0a6b4dc2a7446f2bc5b0a358"
+symbols = [line.rstrip('\n') for line in open("C:/Users/carte/MarketSims/SP500/SP1to125.txt")]
+apikey=""
 #directory=""
 
 try:
