@@ -5,7 +5,7 @@ import pandas as pd
 
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 
-symbols = [line.rstrip('\n') for line in open("C:/Users/carte/MarketSims/Dow/Dow30.txt")]
+symbols = [line.rstrip('\n') for line in open("Dow30.txt")]
 data_df = yf.download(tickers=symbols, period='9mo', interval='1d', rounding='True')
 data_df = data_df['Close']
 size = len(data_df)
