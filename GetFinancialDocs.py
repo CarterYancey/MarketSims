@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 symbols = [line.rstrip('\n') for line in open("Dow30.txt")]
-apikey=""
+apikey="***REMOVED***"
 #directory=""
 
 try:
@@ -29,10 +29,9 @@ def get_jsonparsed_data(url):
     data_json = json.loads(data)
     return data_json
 
-for symbol in symbols:
+def get_balanceSheet(symbol):
     annual = ("https://financialmodelingprep.com/api/v3/balance-sheet-statement/"+symbol+"?limit=120&apikey="+apikey)
     quarterly = ("https://financialmodelingprep.com/api/v3/balance-sheet-statement/"+symbol+"?period=quarter&limit=6&apikey="+apikey)
-    #print(get_jsonparsed_data(url))
     annual_json = get_jsonparsed_data(annual)
     quarterly_json = get_jsonparsed_data(quarterly)
     with open(symbol+'annualBalanceSheet.json', 'w') as outfile:
@@ -40,3 +39,12 @@ for symbol in symbols:
     with open(symbol+'quarterlyBalanceSheet.json', 'w') as outfile:
         json.dump(quarterly_json, outfile)
     
+def get_profile(symbol):
+    profile = ("https://financialmodelingprep.com/api/v3/profile/"+symbol+"?limit=120&apikey="+apikey)
+    profile_json = get_jsonparsed_data(profile)
+    with open(symbol+'profile.json', 'w') as outfile:
+        json.dump(profile_json, outfile)
+
+for symbol in symbols:
+    get_balanceSheet(symbol)
+    get_profile(symbol)
