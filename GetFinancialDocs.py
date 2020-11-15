@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-symbols = [line.rstrip('\n') for line in open("Dow30.txt")]
-apikey="***REMOVED***"
+symbols = [line.rstrip('\n') for line in open("C:/Users/carte/MarketSims/SP500/SP1to125.txt")]
+apikey=""
 #directory=""
 
 try:
