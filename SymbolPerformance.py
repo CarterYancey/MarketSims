@@ -4,8 +4,9 @@ import seaborn
 import pandas as pd
 
 pd.set_option("display.max_rows", None, "display.max_columns", None)
-
-symbols = [line.rstrip('\n') for line in open("Dow30.txt")]
+path="C:/Users/carte/MarketSims/SP500/"
+file="SP500.txt"
+symbols = [line.rstrip('\n') for line in open(path+file)]
 data_df = yf.download(tickers=symbols, period='9mo', interval='1d', rounding='True')
 data_df = data_df['Close']
 size = len(data_df)
@@ -38,3 +39,5 @@ results = {'Sale ratio': pd.Series(priceTo15dma, index=symbols),
 	   'OldBear': pd.Series(longTermBear, index=symbols)}
 results = pd.DataFrame(results).sort_values('Sale ratio')
 print(results)
+name=file.split('.')[0]
+results.to_csv(path+name+'_Performance.csv', index=True, header=True)

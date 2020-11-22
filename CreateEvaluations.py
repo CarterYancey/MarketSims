@@ -4,7 +4,8 @@ import numpy as np
 import statistics as stats
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 path="C:/Users/carte/MarketSims/SP500/"
-symbols = [line.rstrip('\n') for line in open(path+"Dow30.txt")]
+file="Discounts.txt"
+symbols = [line.rstrip('\n') for line in open(path+file)]
 symbol_analysis = {}
 
 print("We will take a list of symbols and evaluate the company using their financial documentation.\n")
@@ -95,4 +96,5 @@ for symbol in symbols:
 tablecolumns = ["STD/Cash", "LTDoverREC", "dividend", "rec mean/m", "ppe mean/m", "ltd mean/m"]
 results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablecolumns)
 print(results)
-results.to_csv(path+'resultsDow30.csv', index=True, header=True)
+name=file.split('.')[0]
+results.to_csv(path+name+'_Analysis.csv', index=True, header=True)
