@@ -4,9 +4,10 @@ import numpy as np
 import statistics as stats
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 path="C:/Users/carte/MarketSims/SP500/"
-file="Discounts.txt"
+file="SP500.txt"
 symbols = [line.rstrip('\n') for line in open(path+file)]
 symbol_analysis = {}
+skipped = []
 
 print("We will take a list of symbols and evaluate the company using their financial documentation.\n")
 print("Important numbers:")
@@ -15,10 +16,16 @@ print("\tmean/m: Essentially, how many years until the mean is reached from the 
 
 for symbol in symbols:
     #Load data and create relevant variables
-    with open('C:/Users/carte/MarketSims/SP500/'+symbol+'profile.json', 'r') as read_file:
+    with open(path+symbol+'profile.json', 'r') as read_file:
         profile = json.load(read_file)
-        price = profile[0]['price']
+        try:
+            price = profile[0]['price']
+        except IndexError:
+            skipped.append(symbol)
+            print("No data for " + symbol)
+            continue
         if (price == 0):
+            skipped.append(symbol)
             continue
         description = profile[0]['description']
         mktCap = profile[0]['mktCap']
@@ -93,6 +100,7 @@ for symbol in symbols:
         print("***INSUFFICIENT FINANCIAL DATA FOR MANAGEMENT ANALYSIS of "+symbol+" ***\n")
     symbol_analysis[symbol] = analysis
 
+print("Skipped: ",skipped)
 tablecolumns = ["STD/Cash", "LTDoverREC", "dividend", "rec mean/m", "ppe mean/m", "ltd mean/m"]
 results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablecolumns)
 print(results)
