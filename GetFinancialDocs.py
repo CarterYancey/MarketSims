@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-symbols = [line.rstrip('\n') for line in open("C:/Users/carte/MarketSims/SP500/SP1to125.txt")]
-apikey=""
-#directory=""
+import os
+import sys, getopt
+import json
 
 try:
     # For Python 3.0 and later
@@ -10,7 +10,41 @@ except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import urlopen
 
-import json
+def main(argv):
+    global path
+    path = os.path.dirname(os.path.realpath(__file__))+'/'
+    global infile
+    infile=''
+    global apikey
+    apikey=''
+    try:
+        opts, args = getopt.gnu_getopt(argv, 'hi:k:K:p:')
+    except getopt.GetoptError as err:
+        print(str(err))
+        print('GetFinancialDocs.py -h for usage')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in("-h", "--help"):
+            print(' -i <input file> \t Filename of file that contains list of symbols seperated by newlines. Must be in same directory as this script, unless the -p flag is used.')
+            print(' -k <api key> \t API key for FMP.')
+            print(' -K <input file> \t Filename of file that contains API key.')
+            print(' -p, --path=<directory> \t Directory for this script to work in. Working directory by default.')
+            sys.exit(2)
+        elif opt in ('-i', "--infile"):
+            infile = arg
+        elif opt in ('-k', "--key"):
+            apikey = arg
+        elif opt in ('K'):
+            apikey = open(arg, 'r').read()
+        elif opt in ('-p', "--path"):
+            path = arg+'/'
+    if (infile=='' or apikey==''):
+        print('Must have input file and API key. See GetFinancialDocs.py -h for usage')
+        sys.exit(2)   
+    symbols = [line.rstrip('\n') for line in open(path+infile)]
+    for symbol in symbols:
+        get_balanceSheet(symbol)
+        get_profile(symbol)
 
 def get_jsonparsed_data(url):
     """
@@ -34,17 +68,17 @@ def get_balanceSheet(symbol):
     quarterly = ("https://financialmodelingprep.com/api/v3/balance-sheet-statement/"+symbol+"?period=quarter&limit=6&apikey="+apikey)
     annual_json = get_jsonparsed_data(annual)
     quarterly_json = get_jsonparsed_data(quarterly)
-    with open(symbol+'annualBalanceSheet.json', 'w') as outfile:
+    with open(path+symbol+'annualBalanceSheet.json', 'w') as outfile:
         json.dump(annual_json, outfile)
-    with open(symbol+'quarterlyBalanceSheet.json', 'w') as outfile:
+    with open(path+symbol+'quarterlyBalanceSheet.json', 'w') as outfile:
         json.dump(quarterly_json, outfile)
     
 def get_profile(symbol):
     profile = ("https://financialmodelingprep.com/api/v3/profile/"+symbol+"?limit=120&apikey="+apikey)
     profile_json = get_jsonparsed_data(profile)
-    with open(symbol+'profile.json', 'w') as outfile:
+    with open(path+symbol+'profile.json', 'w') as outfile:
         json.dump(profile_json, outfile)
 
-for symbol in symbols:
-    get_balanceSheet(symbol)
-    get_profile(symbol)
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
