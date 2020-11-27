@@ -34,8 +34,8 @@ def main(argv):
             infile = arg
         elif opt in ('-k', "--key"):
             apikey = arg
-        elif opt in ('K'):
-            apikey = open(arg, 'r').read()
+        elif opt in ('-K'):
+            apikey = open(path+arg, 'r').read()
         elif opt in ('-p', "--path"):
             path = arg+'/'
     if (infile=='' or apikey==''):
