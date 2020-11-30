@@ -3,7 +3,7 @@ Projects for gathering market data and simulating trading and investing strategi
 
 SymbolPerformance.py
 ====================
-Takes in a file containg a newline-seperated list of symbols and reports the stock price performance for each of them using the Yahoo Finance API (no API key required). The script reports:
+Takes in a file containing a newline-seperated list of ticker symbols and reports the stock price performance for each of them using the Yahoo Finance API (no API key required). The script reports:
 
 	+Sale Ratio: The price-to-15 day Moving Average ratio.
 	
@@ -24,7 +24,7 @@ The theory behind the usefulness of this script is that the moving average of th
 
 GetFinancialDocs.py
 ===================
-Takes in a file containing a newline-seperated list of symbols and downloads financial documnets using the FMP API. The FMP API requires an API key which can be obtained for free from their website (https://financialmodelingprep.com). This API key must either be passed into the script using the -k flag, or placed in a text document which is passed into the script using the -K flag. The script currently downloads:
+Takes in a file containing a newline-seperated list of ticker symbols and downloads financial documnets using the FMP API. The FMP API requires an API key which can be obtained for free from their website (https://financialmodelingprep.com). This API key must either be passed into the script using the -k flag, or placed in a text document which is passed into the script using the -K flag. The script currently downloads:
 
 	+Balance Sheets (Annual and Quarterly)
 	
