@@ -8,7 +8,7 @@ pd.set_option("display.max_rows", None, "display.max_columns", None)
 path = os.path.dirname(os.path.realpath(__file__))+'/'
 file=''
 try:
-    opts, args = getopt.gnu_getopt(sys.argv[1:], 'hi:p:')
+    opts, args = getopt.gnu_getopt(sys.argv[1:], 'hi:p:o:')
 except getopt.GetoptError as err:
     print(str(err))
     print('SymbolPerformance.py -h for usage')
@@ -22,6 +22,9 @@ for opt, arg in opts:
         file = arg
     elif opt in ('-p', "--path"):
         path = arg+'/'
+    elif opt in ('-o'):
+        outfile = path+arg
+        sys.stdout = open(outfile, 'w')
 if (file==''):
     print('Must have input file. See SymbolPerformance.py -h for usage')
     sys.exit(2)
@@ -126,3 +129,4 @@ results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablec
 print(results)
 name=file.split('.')[0]
 results.to_csv(path+name+'_Analysis.csv', index=True, header=True)
+sys.stdout.close()
