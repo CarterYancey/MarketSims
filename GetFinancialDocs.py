@@ -45,6 +45,7 @@ def main(argv):
     for symbol in symbols:
         get_balanceSheet(symbol)
         get_profile(symbol)
+        get_keyMetrics(symbol)
 
 def get_jsonparsed_data(url):
     """
@@ -79,6 +80,11 @@ def get_profile(symbol):
     with open(path+symbol+'profile.json', 'w') as outfile:
         json.dump(profile_json, outfile)
 
+def get_keyMetrics(symbol):
+    metrics = ("https://financialmodelingprep.com/api/v3/key-metrics/"+symbol+"?period=quarter&limit=130&apikey="+apikey)
+    metrics_json = get_jsonparsed_data(metrics)
+    with open(path+symbol+'keyMetrics.json', 'w') as outfile:
+        json.dump(metrics_json, outfile)
 
 if __name__ == "__main__":
    main(sys.argv[1:])
