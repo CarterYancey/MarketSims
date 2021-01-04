@@ -43,9 +43,9 @@ for symbol in symbols:
         profile = json.load(read_file)
         try:
             price = profile[0]['price']
-        except IndexError:
+        except (IndexError, KeyError):
             skipped.append(symbol)
-            print("No data for " + symbol)
+            print("***INSUFFICIENT PROFILE DATA FOR MANAGEMENT ANALYSIS of "+symbol+" ***\n")
             continue
         if (price == 0):
             skipped.append(symbol)
@@ -54,6 +54,19 @@ for symbol in symbols:
         mktCap = profile[0]['mktCap']
         beta = profile[0]['beta']
         dividend = profile[0]['lastDiv']/price*100
+    with open(path+symbol+'ttmRatios.json', 'r') as read_file:
+        ratios = json.load(read_file)
+        try: #Only need to try 1 to see if json was empty
+            priceToBV = ratios[0]['priceToBookRatioTTM']
+        except (IndexError, KeyError):
+            skipped.append(symbol)
+            print("***INSUFFICIENT TTMRATIOS DATA FOR MANAGEMENT ANALYSIS of "+symbol+" ***\n")
+            continue
+        priceToBV = 0 if priceToBV is None else priceToBV
+        priceToSales = ratios[0]['priceToSalesRatioTTM']
+        priceToSales = 0 if priceToSales is None else priceToSales
+        priceToEarnings = ratios[0]['priceEarningsRatioTTM']
+        priceToEarnings = 0 if priceToEarnings is None else priceToEarnings
     with open(path+symbol+'quarterlyBalanceSheet.json', 'r') as read_file:
         quarterly = json.load(read_file)
         quarters = len(quarterly)
@@ -66,13 +79,21 @@ for symbol in symbols:
         quarterly_df.columns=quarterly_dates
         quarterly_df.index=['cash', 'shortTermDebt', 'longTermDebt']
         try:
-            STDoverCASH = stats.mean(quarterly_shortTermDebt[-2:-1])/stats.mean(quarterly_cash[-2:-1])
+            STDoverCASH = stats.mean(quarterly_shortTermDebt[-2:])/stats.mean(quarterly_cash[-2:])
         except ZeroDivisionError:
             STDoverCASH = 2**63 - 1
+        except stats.StatisticsError:
+            print("***INSUFFICIENT QUARTERLY DATA FOR MANAGEMENT ANALYSIS of "+symbol+" ***\n")
+            skipped.append(symbol)
+            continue
         try:
-            LTDoverREC = stats.mean(quarterly_longTermDebt[-2:-1])/stats.mean(quarterly_netReceivables[-2:-1])
+            LTDoverREC = stats.mean(quarterly_longTermDebt[-2:])/stats.mean(quarterly_netReceivables[-2:])
         except ZeroDivisionError:
             LTDoverREC = 2**63 - 1
+        except stats.StatisticsError:
+            print("***INSUFFICIENT QUARTERLY DATA FOR MANAGEMENT ANALYSIS of "+symbol+" ***\n")
+            skipped.append(symbol)
+            continue
     with open(path+symbol+'annualBalanceSheet.json', 'r') as read_file:
         annual = json.load(read_file)
         years = len(annual)
@@ -89,10 +110,10 @@ for symbol in symbols:
                                  columns=annual_dates,
                                  index=['cash', 'shortTermDebt','netReceivables',
                                         'PPE', 'longTermDebt'])
-    analysis=[STDoverCASH, LTDoverREC, dividend]
+    analysis=[STDoverCASH, LTDoverREC, dividend, priceToBV, priceToSales, priceToEarnings]
     analysis = [round(n, 4) for n in analysis]
     #DisplayData
-    print(description[0:25], mktCap, beta)
+    print(description[:40], mktCap, beta)
     print(quarterly_df)
     print('\n')
     print(annual_df)
@@ -107,24 +128,34 @@ for symbol in symbols:
         annualRECMean = stats.mean(annual_netReceivables)
         annualPPEMean = stats.mean(annual_PPE)
         annualLTDMean = stats.mean(annual_longTermDebt)
+        annualRECVar = stats.variance(annual_netReceivables)
+        annualPPEVar = stats.variance(annual_PPE)
+        annualLTDVar = stats.variance(annual_longTermDebt)
         sciNot='{:.2E}' #Scientific Notation
-        results_rec = [m_rec, c_rec, annualRECMean, annualRECMean/m_rec]
-        results_ppe = [m_ppe, c_ppe, annualPPEMean, annualPPEMean/m_ppe]
-        results_ltd = [m_ltd, c_ltd, annualLTDMean, annualLTDMean/m_ltd]
-        print("\t\tm \t c \t mean \t mean/m")
+        results_rec = [m_rec, c_rec, annualRECMean, annualRECMean/m_rec, annualRECVar**0.5]
+        results_ppe = [m_ppe, c_ppe, annualPPEMean, annualPPEMean/m_ppe, annualPPEVar**0.5]
+        results_ltd = [m_ltd, c_ltd, annualLTDMean, annualLTDMean/m_ltd, annualLTDVar**0.5]
+        print("\t\tm \t c \t mean \t mean/m \t mean/StdDev")
         print("rec: ", list(map(sciNot.format, results_rec)))
         print("ppe: ", list(map(sciNot.format, results_ppe)))
         print("ltd: ", list(map(sciNot.format, results_ltd)))
         print('\n')
-        analysis.append(round(results_rec[-1], 4))
-        analysis.append(round(results_ppe[-1], 4))
-        analysis.append(round(results_ltd[-1], 4))
+        for result in results_rec[2:]:
+            analysis.append(round(result, 4))
+        for result in results_ppe[2:]:
+            analysis.append(round(result, 4))
+        for result in results_ltd[2:]:
+            analysis.append(round(result, 4))
     else:
-        print("***INSUFFICIENT FINANCIAL DATA FOR MANAGEMENT ANALYSIS of "+symbol+" ***\n")
+        print("***INSUFFICIENT ANNUAL DATA FOR MANAGEMENT ANALYSIS of "+symbol+" ***\n")
     symbol_analysis[symbol] = analysis
 
 print("Skipped: ",skipped)
-tablecolumns = ["STD/Cash", "LTDoverREC", "dividend", "rec mean/m", "ppe mean/m", "ltd mean/m"]
+tablecolumns = ["STD/Cash", "LTDoverREC", "dividend",
+                "price/BV", "p/Sales", "p/e",
+                "rec mean", "rec mean/m", "rec stdDev",
+                "ppe mean", "ppe mean/m","ppe stdDev",
+                "ltd mean", "ltd mean/m","ltd stdDev"]
 results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablecolumns)
 print(results)
 name=file.split('.')[0]
