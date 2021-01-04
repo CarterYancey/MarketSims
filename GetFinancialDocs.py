@@ -3,12 +3,9 @@ import os
 import sys, getopt
 import json
 
-try:
-    # For Python 3.0 and later
-    from urllib.request import urlopen
-except ImportError:
-    # Fall back to Python 2's urllib2
-    from urllib2 import urlopen
+# For Python 3.0 and later
+from urllib.request import urlopen
+from urllib.error import URLError, HTTPError
 
 def main(argv):
     global path
@@ -43,9 +40,12 @@ def main(argv):
         sys.exit(2)   
     symbols = [line.rstrip('\n') for line in open(path+infile)]
     for symbol in symbols:
+        print("Getting balance sheet for " + symbol)
         get_balanceSheet(symbol)
+        print("Getting profile for " + symbol)
         get_profile(symbol)
-        get_keyMetrics(symbol)
+        print("Getting ttmRatios for " + symbol)
+        get_ttmRatios(symbol)
 
 def get_jsonparsed_data(url):
     """
@@ -59,9 +59,19 @@ def get_jsonparsed_data(url):
     -------
     dict
     """
-    response = urlopen(url)
-    data = response.read().decode("utf-8")
-    data_json = json.loads(data)
+    try:
+        response = urlopen(url)
+    except HTTPError as e:
+        print('The server couldn\'t fulfill the request.')
+        print('Error code: ', e.code)
+        data_json = {}
+    except URLError as e:
+        print('We failed to reach a server.')
+        print('Reason: ', e.reason)
+        data_json = {}
+    else:
+        data = response.read().decode("utf-8")
+        data_json = json.loads(data)
     return data_json
 
 def get_balanceSheet(symbol):
@@ -80,10 +90,10 @@ def get_profile(symbol):
     with open(path+symbol+'profile.json', 'w') as outfile:
         json.dump(profile_json, outfile)
 
-def get_keyMetrics(symbol):
-    metrics = ("https://financialmodelingprep.com/api/v3/key-metrics/"+symbol+"?period=quarter&limit=130&apikey="+apikey)
+def get_ttmRatios(symbol):
+    metrics = ("https://financialmodelingprep.com/api/v3/ratios-ttm/"+symbol+"?apikey="+apikey)
     metrics_json = get_jsonparsed_data(metrics)
-    with open(path+symbol+'keyMetrics.json', 'w') as outfile:
+    with open(path+symbol+'ttmRatios.json', 'w') as outfile:
         json.dump(metrics_json, outfile)
 
 if __name__ == "__main__":
