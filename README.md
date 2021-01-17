@@ -15,6 +15,8 @@ Takes in a file containing a newline-seperated list of ticker symbols and report
 	
 	+OldBear:	The 15 day to 180 day Moving Average ratio.
 	
+	+High:		The price to 52-week high (actually, 30-day moving average 15 days after 52-week high, to account for sudden spikes)
+	
 Results are sorted by Sale Ratio and printed to the screen, as well as saved to a csv file that is created in the same directory as the input file containing the list of symbols.
 
 When the YoungBear metric is less than 1, the share price has been in steady decline in the past short term. When the OldBear metric is less than 1, the share price has been in steady decline for some time. These metrics may also be less than 1 in cases of extremely steep drops. 
