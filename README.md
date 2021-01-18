@@ -32,9 +32,11 @@ Takes in a file containing a newline-seperated list of ticker symbols and downlo
 	
 	+Company profile
 	
+	+Key Metrics
+	
 	+Income Statements (Annual and Quarterly)
 	
-More financial documents may be supported later. Because 5 documents are downloaded per symbol, this caps the number of symbols you can get docs for per day using the free version of FMP to 50. Documents are saved as json files in the same directory as the list of symbols.
+More financial documents may be supported later. Because 7 documents are downloaded per symbol, this caps the number of symbols you can get docs for per day using the free version of FMP to 35. Documents are saved as json files in the same directory as the list of symbols.
 
 
 CreateEvaluations.py
