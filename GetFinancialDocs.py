@@ -80,7 +80,7 @@ def get_jsonparsed_data(url):
 
 def get_balanceSheet(symbol):
     annual = ("https://financialmodelingprep.com/api/v3/balance-sheet-statement/"+symbol+"?limit=120&apikey="+apikey)
-    quarterly = ("https://financialmodelingprep.com/api/v3/balance-sheet-statement/"+symbol+"?period=quarter&limit=6&apikey="+apikey)
+    quarterly = ("https://financialmodelingprep.com/api/v3/balance-sheet-statement/"+symbol+"?period=quarter&limit=120&apikey="+apikey)
     annual_json = get_jsonparsed_data(annual)
     quarterly_json = get_jsonparsed_data(quarterly)
     with open(path+symbol+'annualBalanceSheet.json', 'w') as outfile:
@@ -102,7 +102,7 @@ def get_ttmRatios(symbol):
 
 def get_keyMetrics(symbol):
     annual = ("https://financialmodelingprep.com/api/v3/key-metrics/"+symbol+"?limit=120&apikey="+apikey)
-    quarterly = ("https://financialmodelingprep.com/api/v3/key-metrics/"+symbol+"?period=quarter&limit=6&apikey="+apikey)
+    quarterly = ("https://financialmodelingprep.com/api/v3/key-metrics/"+symbol+"?period=quarter&limit=120&apikey="+apikey)
     annual_json = get_jsonparsed_data(annual)
     quarterly_json = get_jsonparsed_data(quarterly)
     with open(path+symbol+'annualKeyMetrics.json', 'w') as outfile:
@@ -112,7 +112,7 @@ def get_keyMetrics(symbol):
 
 def get_incomeStatement(symbol):
     annual = ("https://financialmodelingprep.com/api/v3/income-statement/"+symbol+"?limit=120&apikey="+apikey)
-    quarterly = ("https://financialmodelingprep.com/api/v3/income-statement/"+symbol+"?period=quarter&limit=6&apikey="+apikey)
+    quarterly = ("https://financialmodelingprep.com/api/v3/income-statement/"+symbol+"?period=quarter&limit=120&apikey="+apikey)
     annual_json = get_jsonparsed_data(annual)
     quarterly_json = get_jsonparsed_data(quarterly)
     with open(path+symbol+'annualIncomeStatement.json', 'w') as outfile:
