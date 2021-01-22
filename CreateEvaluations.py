@@ -144,17 +144,18 @@ for symbol in symbols:
     print('\n')
     #Least squares for annual Longterm Debt, receivables, and NPPE.
     if (years > 1): #Cannot do linear regression without at least 2 data points
-        a = [n for n in range(years)]
-        A = np.vstack([a, np.ones(len(a))]).T
-        m_rec, c_rec = np.linalg.lstsq(A, annual_netReceivables, rcond=None)[0]
-        m_ppe, c_ppe = np.linalg.lstsq(A, annual_PPE, rcond=None)[0]
-        m_ltd, c_ltd = np.linalg.lstsq(A, annual_longTermDebt, rcond=None)[0]
-        annualRECMean = stats.mean(annual_netReceivables)
-        annualPPEMean = stats.mean(annual_PPE)
-        annualLTDMean = stats.mean(annual_longTermDebt)
-        annualRECVar = stats.variance(annual_netReceivables)
-        annualPPEVar = stats.variance(annual_PPE)
-        annualLTDVar = stats.variance(annual_longTermDebt)
+        a = [n for n in range(min(5, years))]
+        a_length = len(a)
+        A = np.vstack([a, np.ones(a_length)]).T
+        m_rec, c_rec = np.linalg.lstsq(A, annual_netReceivables[-a_length:], rcond=None)[0]
+        m_ppe, c_ppe = np.linalg.lstsq(A, annual_PPE[-a_length:], rcond=None)[0]
+        m_ltd, c_ltd = np.linalg.lstsq(A, annual_longTermDebt[-a_length:], rcond=None)[0]
+        annualRECMean = stats.mean(annual_netReceivables[-a_length:])
+        annualPPEMean = stats.mean(annual_PPE[-a_length:])
+        annualLTDMean = stats.mean(annual_longTermDebt[-a_length:])
+        annualRECVar = stats.variance(annual_netReceivables[-a_length:])
+        annualPPEVar = stats.variance(annual_PPE[-a_length:])
+        annualLTDVar = stats.variance(annual_longTermDebt[-a_length:])
         results_rec = [m_rec, c_rec, annualRECMean, annualRECMean/m_rec, annualRECVar**0.5]
         results_ppe = [m_ppe, c_ppe, annualPPEMean, annualPPEMean/m_ppe, annualPPEVar**0.5]
         results_ltd = [m_ltd, c_ltd, annualLTDMean, annualLTDMean/m_ltd, annualLTDVar**0.5]
@@ -171,6 +172,34 @@ for symbol in symbols:
             analysis.append(round(result, 4))
     else:
         badDataMessage("Annual", symbol)
+        skipped.append(symbol)
+        continue
+    analysis.append((2/3)*bvPerShare)
+    analysis.append((2/3)*bvPerShare + 10*annualEPS)
+    analysis.append((2/3)*bvPerShare + 20*annualEPS)
+    #    analysis=[STDoverCASH, LTDoverREC, dividend, bvPerShare, annualEPS, quarterlyEPS]
+    rating = 0
+    if (STDoverCASH < 7):
+        rating +=1
+    if (LTDoverREC < 7):
+        rating +=1
+    if (dividend > 2.5):
+        rating +=1
+    if (results_ltd[3] < 0):
+        rating +=1
+    if (results_ltd[3] > -5 and results_ltd[3] < 0):
+        rating +=1
+    if (results_ltd[3] >= 0):
+        if ((results_ltd[3] > results_rec[3]) and (results_rec[3] > 0)):
+            rating+=0.5
+        if ((results_ltd[3] > results_ppe[3]) and (results_ppe[3] > 0)):
+            rating+=0.5
+    if (results_ltd[3] > 0 and results_ltd[3] < 5):
+        rating -=1
+    if (results_rec[3] > 0 and results_rec[3] <5):
+        rating +=1
+    analysis.append(price)
+    analysis.append(rating)
     symbol_analysis[symbol] = analysis
 
 print("Skipped: ",skipped)
@@ -178,7 +207,9 @@ tablecolumns = ["STD/Cash", "LTDoverREC", "dividend",
                 "BV/share", "annualEPS", "quarterlyEPS",
                 "rec mean", "rec mean/m", "rec stdDev",
                 "ppe mean", "ppe mean/m","ppe stdDev",
-                "ltd mean", "ltd mean/m","ltd stdDev"]
+                "ltd mean", "ltd mean/m","ltd stdDev",
+                "Estimate1", "Estimate2", "Estimate3",
+                "Price", "Rating"]
 results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablecolumns)
 print(results)
 name=file.split('.')[0]
