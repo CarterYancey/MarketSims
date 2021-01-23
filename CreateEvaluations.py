@@ -39,8 +39,11 @@ skipped = []
 maxInt = 2**63 - 1
 sciNot='{:.2E}' #Scientific Notation
 
+badMessages = []
 def badDataMessage(data, symbol):
-    print("***INSUFFICIENT "+data+" DATA FOR MANAGEMENT ANALYSIS of "+symbol+" ***\n")
+    messageStr = ("***INSUFFICIENT "+data+" DATA FOR ANALYSIS of "+symbol+" ***\n")
+    print(messageStr)
+    badMessages.append(messageStr)
     
 print("We will take a list of symbols and evaluate the company using their financial documentation.\n")
 print("Important numbers:")
@@ -60,33 +63,39 @@ for symbol in symbols:
             continue
         if (price == 0):
             skipped.append(symbol)
+            badDataMessage("Price", symbol)
             continue
         description = profile[0]['description'] if ('description' in profile[0]) else "[n/a]"
         dividend = profile[0]['lastDiv']/price*100 if ('lastDiv' in profile[0]) else 0
     with open(path+symbol+'quarterlyKeyMetrics.json', 'r') as read_file:
-        quarterly = json.load(read_file)
-        quarters = len(quarterly)
-        quarterly_bookValuePerShare = [quarterly[n]['bookValuePerShare'] for n in range(quarters-1,-1,-1)]
-        quarterly_netIncomePerShare = [quarterly[n]['netIncomePerShare'] for n in range(quarters-1,-1,-1)]
+        quarterlyData = json.load(read_file)
+        numQuarters = min(len(quarterlyData), 10) #Use at most last 10 quarters of data
+        quarterly = {}
+        RANGE = range(numQuarters-1,-1,-1) #We want our list to end in the present, but quarterlyData[0] is most recent.
+        metrics = ['bookValuePerShare', 'netIncomePerShare']
+        for metric in metrics:
+            quarterly[metric] = [quarterlyData[n][metric] for n in RANGE]
         try:
-            bvPerShare = stats.mean(quarterly_bookValuePerShare[-4:])
+            bvPerShare = stats.mean(quarterly['bookValuePerShare'][-4:])
         except:
             badDataMessage("quarterly BV/share", symbol)
             bvPerShare = 0
             #THIS NEEDS DRAMATIC IMPROVEMENT BUT IT IS ALMOST BEDTIME
         try:
-            quarterlyEPS = stats.mean(quarterly_netIncomePerShare[-4:])
+            quarterlyEPS = stats.mean(quarterly['netIncomePerShare'][-4:])
         except:
             badDataMessage("quarterly EPS", symbol)
             quarterlyEPS = 0
             #THIS NEEDS DRAMATIC IMPROVEMENT BUT IT IS ALMOST BEDTIME
     with open(path+symbol+'annualKeyMetrics.json', 'r') as read_file:
-        annual = json.load(read_file)
-        years = len(annual)
-        annual_bookValuePerShare = [annual[n]['bookValuePerShare'] for n in range(years-1,-1,-1)]
-        annual_netIncomePerShare = [annual[n]['netIncomePerShare'] for n in range(years-1,-1,-1)]
+        annualData = json.load(read_file)
+        numYears = min(10, len(annualData)) #User at most last 10 years of data
+        RANGE = range(numYears-1,-1,-1)
+        annual = {}
+        for metrics in metrics:
+            annual[metric] = [annualData[n][metric] for n in RANGE]
         try:
-            annualEPS = stats.mean(annual_netIncomePerShare[-3:])
+            annualEPS = stats.mean(annual['netIncomePerShare'][-3:])
         except:
             badDataMessage("annual EPS", symbol)
             annualEPS = 0
@@ -202,6 +211,8 @@ for symbol in symbols:
     analysis.append(rating)
     symbol_analysis[symbol] = analysis
 
+for message in badMessages:
+    print(message)
 print("Skipped: ",skipped)
 tablecolumns = ["STD/Cash", "LTDoverREC", "dividend",
                 "BV/share", "annualEPS", "quarterlyEPS",
