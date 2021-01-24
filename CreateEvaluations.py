@@ -157,55 +157,36 @@ for symbol in symbols:
         a = [n for n in range(min(5, numYears))]
         a_length = len(a)
         A = np.vstack([a, np.ones(a_length)]).T
-        m = {}
-        c = {}
+        slope = {}
+        intercept = {}
         metrics = ['netReceivables', 'propertyPlantEquipmentNet', 'longTermDebt']
         for metric in metrics:
-            m[metric], c[metric] = np.linalg.lstsq(A, annual[metric][-a_length:], rcond=None)[0]
-        #m_rec, c_rec = np.linalg.lstsq(A, annual_netReceivables[-a_length:], rcond=None)[0]
-        #m_ppe, c_ppe = np.linalg.lstsq(A, annual_PPE[-a_length:], rcond=None)[0]
-        #m_ltd, c_ltd = np.linalg.lstsq(A, annual_longTermDebt[-a_length:], rcond=None)[0]
+            slope[metric], intercept[metric] = np.linalg.lstsq(A, annual[metric][-a_length:], rcond=None)[0]
         annualMeans = {}
         annualVars = {}
         for metric in metrics:
             annualMeans[metric] = stats.mean(annual[metric][-a_length:])
             annualVars[metric] = stats.variance(annual[metric][-a_length:])
-        #annualRECMean = stats.mean(annual_netReceivables[-a_length:])
-        #annualPPEMean = stats.mean(annual_PPE[-a_length:])
-        #annualLTDMean = stats.mean(annual_longTermDebt[-a_length:])
-        #annualRECVar = stats.variance(annual_netReceivables[-a_length:])
-        #annualPPEVar = stats.variance(annual_PPE[-a_length:])
-        #annualLTDVar = stats.variance(annual_longTermDebt[-a_length:])
         annualResults = {}
         for metric in metrics:
-            annualResults[metric] = [m[metric], c[metric], annualMeans[metric], annualMeans[metric]/m[metric], annualVars[metric]**0.5]
-        #results_rec = [m_rec, c_rec, annualRECMean, annualRECMean/m_rec, annualRECVar**0.5]
-        #results_ppe = [m_ppe, c_ppe, annualPPEMean, annualPPEMean/m_ppe, annualPPEVar**0.5]
-        #results_ltd = [m_ltd, c_ltd, annualLTDMean, annualLTDMean/m_ltd, annualLTDVar**0.5]
+            annualResults[metric] = [slope[metric], intercept[metric], annualMeans[metric], annualMeans[metric]/slope[metric], annualVars[metric]**0.5]
         print("\t\tm \t c \t mean \t mean/m \t mean/StdDev")
         for metric in metrics:
             print(metric + ": ", list(map(sciNot.format, annualResults[metric])))
-       # print("rec: ", list(map(sciNot.format, results_rec)))
-       # print("ppe: ", list(map(sciNot.format, results_ppe)))
-       # print("ltd: ", list(map(sciNot.format, results_ltd)))
         print('\n')
         for metric in metrics:
-            for result in annualResults[metric][2:]:
-                analysis.append(round(result, 4))
-       # for result in results_rec[2:]:
-       #     analysis.append(round(result, 4))
-       # for result in results_ppe[2:]:
-       #     analysis.append(round(result, 4))
-       # for result in results_ltd[2:]:
-       #     analysis.append(round(result, 4))
+            try:
+                analysis.append(round(annualResults[metric][2]/annualResults[metric][4], 4))
+            except ZeroDivisionError:
+                analysis.append('nan')
+            analysis.append(round(annualResults[metric][3], 4))
     else:
         badDataMessage("Annual", symbol)
         skipped.append(symbol)
         continue
-    analysis.append((2/3)*bvPerShare)
-    analysis.append((2/3)*bvPerShare + 10*annualEPS)
-    analysis.append((2/3)*bvPerShare + 20*annualEPS)
-    #    analysis=[STDoverCASH, LTDoverREC, dividend, bvPerShare, annualEPS, quarterlyEPS]
+    analysis.append(round((2/3)*bvPerShare, 4))
+    analysis.append(round((2/3)*bvPerShare + 10*annualEPS, 4))
+    analysis.append(round((2/3)*bvPerShare + 20*annualEPS, 4))
     annualLTDgrowth = annualResults['longTermDebt'][3]
     annualPPEgrowth = annualResults['propertyPlantEquipmentNet'][3]
     annualRECgrowth = annualResults['netReceivables'][3]
@@ -228,7 +209,7 @@ for symbol in symbols:
             rating+=0.5
     if (annualLTDgrowth > 0 and annualLTDgrowth < 5):
         rating -=1
-    if (annualRECgrowth > 0 and annualLTDgrowth <5):
+    if (annualRECgrowth > 0 and annualRECgrowth <5):
         rating +=1
     analysis.append(price)
     analysis.append(rating)
@@ -239,13 +220,13 @@ for message in badMessages:
 print("Skipped: ",skipped)
 tablecolumns = ["STD/Cash", "LTDoverREC", "dividend",
                 "BV/share", "annualEPS", "quarterlyEPS",
-                "rec mean", "rec mean/m", "rec stdDev",
-                "ppe mean", "ppe mean/m","ppe stdDev",
-                "ltd mean", "ltd mean/m","ltd stdDev",
+                "rec mean/stdDev", "rec mean/m",
+                "ppe mean/stdDev", "ppe mean/m",
+                "ltd mean/stdDev", "ltd mean/m",
                 "Estimate1", "Estimate2", "Estimate3",
                 "Price", "Rating"]
 results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablecolumns)
 print(results)
 name=file.split('.')[0]
 results.to_csv(path+name+'_Analysis.csv', index=True, header=True)
-sys.stdout.close()
+#sys.stdout.close()
