@@ -226,6 +226,7 @@ for symbol in symbols:
         rating -=1
     if (annualRECgrowth > 0 and annualRECgrowth <5):
         rating +=2   
+    analysis.append(price)
     analysis.append(rating)
     if (historicAnalysis):      
         data_df = yf.download(tickers=symbol, start=annualData[0]['date'], rounding='True', actions=True)
