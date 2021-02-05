@@ -194,11 +194,11 @@ for symbol in symbols:
     if (STDoverCASH < 7):
         rating +=1
     if (LTDoverREC < 7):
-        rating +=1
+        rating +=2
     if (dividend > 2.5):
-        rating +=1
+        rating +=0.5
     #if (results_ltd[3] < 0): 
-    if (annualLTDgrowth < 0): 
+    if (annualLTDgrowth < 0 and annualLTDgrowth > -15): 
         rating +=1
         if (annualLTDgrowth > -5):
             rating +=1
@@ -210,7 +210,7 @@ for symbol in symbols:
     if (annualLTDgrowth > 0 and annualLTDgrowth < 5):
         rating -=1
     if (annualRECgrowth > 0 and annualRECgrowth <5):
-        rating +=1
+        rating +=2
     analysis.append(price)
     analysis.append(rating)
     symbol_analysis[symbol] = analysis
