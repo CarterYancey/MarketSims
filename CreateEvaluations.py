@@ -8,8 +8,6 @@ import yfinance as yf
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 path = os.path.dirname(os.path.realpath(__file__))+'/'
 file=''
-historicString='_'
-historicAnalysis=False
 
 #Read CL arguments
 try:
@@ -78,15 +76,9 @@ for symbol in symbols:
         description = profile[0]['description'] if ('description' in profile[0]) else "[n/a]"
         dividend = profile[0]['lastDiv']/price*100 if ('lastDiv' in profile[0]) else 0
     with open(path+symbol+'quarterlyKeyMetrics.json', 'r') as read_file:
-<<<<<<< HEAD
         quarterlyData = json.load(read_file) #quarterlyData[0] is most recent
         if (historicAnalysis):
             quarterlyData = quarterlyData[-10:] #If doing historic analysis, use first 10 years available
-=======
-        quarterlyData = json.load(read_file)
-        if (historicAnalysis):
-            quarterlyData = quarterlyData[-10:]
->>>>>>> 13be9e334150e74949851acdbfaea2e6b37fa2ac
         numQuarters = min(len(quarterlyData), 10) #Use at most last 10 quarters of data
         quarterly = {}
         RANGE = range(numQuarters-1,-1,-1) #We want our list to end in the present, but quarterlyData[0] is most recent.
@@ -236,20 +228,11 @@ for symbol in symbols:
         rating -=1
     if (annualRECgrowth > 0 and annualRECgrowth <5):
         rating +=2   
-<<<<<<< HEAD
     analysis.append(rating)
     if (historicAnalysis):      
         data_df = yf.download(tickers=symbol, start=annualData[0]['date'], rounding='True', actions=True)
         twelvemonthLow = min(data_df['Close'][:300]) #What was the cheapest you could buy the security around this time?
         tenyrlater = data_df['Close'][min(3000, len(data_df)-1)] #What was the security's price 10yrs later (or last available quote)
-=======
-    analysis.append(price)
-    analysis.append(rating)
-    if (historicAnalysis):      
-        data_df = yf.download(tickers=symbol, start=annualData[0]['date'], rounding='True', actions=True)
-        twelvemonthLow = min(data_df['Close'][:300])
-        tenyrlater = data_df['Close'][min(3000, len(data_df)-1)]
->>>>>>> 13be9e334150e74949851acdbfaea2e6b37fa2ac
         analysis.append(twelvemonthLow)
         analysis.append(tenyrlater)
         analysis.append(price)
