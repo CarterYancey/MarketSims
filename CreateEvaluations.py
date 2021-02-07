@@ -4,13 +4,14 @@ import numpy as np
 import statistics as stats
 import os
 import sys, getopt
+import yfinance as yf
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 path = os.path.dirname(os.path.realpath(__file__))+'/'
 file=''
 
 #Read CL arguments
 try:
-    opts, args = getopt.gnu_getopt(sys.argv[1:], 'hi:p:o:')
+    opts, args = getopt.gnu_getopt(sys.argv[1:], 'hi:p:o:H')
 except getopt.GetoptError as err:
     print(str(err))
     print('SymbolPerformance.py -h for usage')
@@ -20,6 +21,7 @@ for opt, arg in opts:
         print(' -i <input file> \t Filename of file that contains list of symbols seperated by newlines. Must be in same directory as this script, unless the -p flag is used.')
         print(' -p, --path=<directory> \t Directory for this script to work in. Working directory by default.')
         print(' -o <outfile> \t Filename of a file that will be written to rather than stdout. This only affects what is normally printed to the terminal.')
+        print(' -H, --historic \t Perform analysis using oldest data available, as if you were using this script in the past. Helpful for determining efficacy of this script. BEWARE SURVIVORSHIP BIAS!')
         sys.exit(2)
     elif opt in ('-i', "--infile"):
         file = arg
@@ -28,6 +30,9 @@ for opt, arg in opts:
     elif opt in ('-o'):
         outfile = path+arg
         sys.stdout = open(outfile, 'w')
+    elif opt in ('-H', "--historic"):
+        historicAnalysis = True
+        historicString = '_Historic'
 if (file==''):
     print('Must have input file. See SymbolPerformance.py -h for usage')
     sys.exit(2)
@@ -38,7 +43,10 @@ symbol_analysis = {}
 skipped = []
 maxInt = 2**63 - 1
 sciNot='{:.2E}' #Scientific Notation
+historicString='_'
+historicAnalysis=False
 
+#Record and display error when missing crucial data points
 badMessages = []
 def badDataMessage(data, symbol):
     messageStr = ("***INSUFFICIENT "+data+" DATA FOR ANALYSIS of "+symbol+" ***\n")
@@ -68,7 +76,9 @@ for symbol in symbols:
         description = profile[0]['description'] if ('description' in profile[0]) else "[n/a]"
         dividend = profile[0]['lastDiv']/price*100 if ('lastDiv' in profile[0]) else 0
     with open(path+symbol+'quarterlyKeyMetrics.json', 'r') as read_file:
-        quarterlyData = json.load(read_file)
+        quarterlyData = json.load(read_file) #quarterlyData[0] is most recent
+        if (historicAnalysis):
+            quarterlyData = quarterlyData[-10:] #If doing historic analysis, use first 10 years available
         numQuarters = min(len(quarterlyData), 10) #Use at most last 10 quarters of data
         quarterly = {}
         RANGE = range(numQuarters-1,-1,-1) #We want our list to end in the present, but quarterlyData[0] is most recent.
@@ -89,6 +99,8 @@ for symbol in symbols:
             #THIS NEEDS DRAMATIC IMPROVEMENT BUT IT IS ALMOST BEDTIME
     with open(path+symbol+'annualKeyMetrics.json', 'r') as read_file:
         annualData = json.load(read_file)
+        if (historicAnalysis):
+            annualData = annualData[-10:]
         numYears = min(10, len(annualData)) #User at most last 10 years of data
         RANGE = range(numYears-1,-1,-1)
         annual = {}
@@ -103,6 +115,8 @@ for symbol in symbols:
     #Source quarterly Balance Sheet Data
     with open(path+symbol+'quarterlyBalanceSheet.json', 'r') as read_file:
         quarterlyData = json.load(read_file)
+        if (historicAnalysis):
+            quarterlyData = quarterlyData[-10:]
         numQuarters = min(10, len(quarterlyData))
         RANGE = range(numQuarters-1,-1,-1)
         quarterly = {}
@@ -131,6 +145,8 @@ for symbol in symbols:
     #Source annual Balance Sheet Data
     with open(path+symbol+'annualBalanceSheet.json', 'r') as read_file:
         annualData = json.load(read_file)
+        if (historicAnalysis):
+            annualData = annualData[-10:]
         numYears = min(10, len(annualData))
         RANGE = range(numYears-1,-1,-1)
         annual = {}
@@ -176,6 +192,8 @@ for symbol in symbols:
         print('\n')
         for metric in metrics:
             try:
+                #Mean/variance gives an idea of how suddenly large changes are occurring
+                #Ex, taking out debt gradually or a lot suddenly
                 analysis.append(round(annualResults[metric][2]/annualResults[metric][4], 4))
             except ZeroDivisionError:
                 analysis.append('nan')
@@ -191,16 +209,15 @@ for symbol in symbols:
     annualPPEgrowth = annualResults['propertyPlantEquipmentNet'][3]
     annualRECgrowth = annualResults['netReceivables'][3]
     rating = 0
-    if (STDoverCASH < 7):
+    if (STDoverCASH < 4):
         rating +=1
     if (LTDoverREC < 7):
         rating +=2
     if (dividend > 2.5):
         rating +=0.5
-    #if (results_ltd[3] < 0): 
-    if (annualLTDgrowth < 0 and annualLTDgrowth > -15): 
+    if (annualLTDgrowth < 0 and annualLTDgrowth > -10): 
         rating +=1
-        if (annualLTDgrowth > -5):
+        if (annualLTDgrowth > -5 and LTDoverREC > 5): #Paying off debt fast is easy when you don't have much
             rating +=1
     if (annualLTDgrowth >= 0):
         if ((annualLTDgrowth > annualRECgrowth) and (annualRECgrowth > 0)):
@@ -210,9 +227,18 @@ for symbol in symbols:
     if (annualLTDgrowth > 0 and annualLTDgrowth < 5):
         rating -=1
     if (annualRECgrowth > 0 and annualRECgrowth <5):
-        rating +=2
-    analysis.append(price)
+        rating +=2   
     analysis.append(rating)
+    if (historicAnalysis):      
+        data_df = yf.download(tickers=symbol, start=annualData[0]['date'], rounding='True', actions=True)
+        twelvemonthLow = min(data_df['Close'][:300]) #What was the cheapest you could buy the security around this time?
+        tenyrlater = data_df['Close'][min(3000, len(data_df)-1)] #What was the security's price 10yrs later (or last available quote)
+        analysis.append(twelvemonthLow)
+        analysis.append(tenyrlater)
+        analysis.append(price)
+        analysis.append(annualData[0]['date'])
+    else:
+        analysis.append(price)
     symbol_analysis[symbol] = analysis
 
 for message in badMessages:
@@ -224,9 +250,11 @@ tablecolumns = ["STD/Cash", "LTDoverREC", "dividend",
                 "ppe mean/stdDev", "ppe mean/m",
                 "ltd mean/stdDev", "ltd mean/m",
                 "Estimate1", "Estimate2", "Estimate3",
-                "Price", "Rating"]
+                "Rating", "Price"]
+if (historicAnalysis):
+    tablecolumns += ["10yrlatr", "Today", "LastDate"]
 results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablecolumns)
 print(results)
 name=file.split('.')[0]
-results.to_csv(path+name+'_Analysis.csv', index=True, header=True)
+results.to_csv(path+name+historicString+'Analysis.csv', index=True, header=True)
 #sys.stdout.close()
