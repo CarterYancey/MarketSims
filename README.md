@@ -64,3 +64,7 @@ The script reports:
 Because the rec, ppe, and ltd mean/m metrics can be confusing, it is possible to create rec, ppe, and ltd SCORE metrics. For rec and ppe, divide 100 by the mean/m value. For ltd, divide -100 by the mean/m value. This gives us scores that can be sorted, with higher scores being more desirable than lower scores, and score values generally appearing between -100 and 100.
 
 This script has need for improvements, both in quality of the code and scope of function. For now, it is useful for tracking metrics that I value most in evaluating a company's worthiness for investment.
+
+GetSP500.py
+====================
+Accepts user input for a date in the past, then finds what the S&P500 components on that date were. This script is poorly designed and still in its infancy, but I needed a quick-fix for getting old S&P500 tickers. These will be useful for avoiding survivorship bias in evaluations; companies currently in the S&P500 will obviously have performed well regardless of their historic analysis (using --historic flag of CreateEvaluations.py) -- that is why they are in the index. What we really want is to do a historic analysis on the tickers that used to be in the index.
