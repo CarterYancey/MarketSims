@@ -8,6 +8,8 @@ import yfinance as yf
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 path = os.path.dirname(os.path.realpath(__file__))+'/'
 file=''
+historicString='_'
+historicAnalysis=False
 
 #Read CL arguments
 try:
@@ -43,8 +45,6 @@ symbol_analysis = {}
 skipped = []
 maxInt = 2**63 - 1
 sciNot='{:.2E}' #Scientific Notation
-historicString='_'
-historicAnalysis=False
 
 #Record and display error when missing crucial data points
 badMessages = []
@@ -73,7 +73,7 @@ for symbol in symbols:
             skipped.append(symbol)
             badDataMessage("Price", symbol)
             continue
-        description = profile[0]['description'] if ('description' in profile[0]) else "[n/a]"
+        description = str(profile[0]['description']) if ('description' in profile[0]) else "[n/a]"
         dividend = profile[0]['lastDiv']/price*100 if ('lastDiv' in profile[0]) else 0
     with open(path+symbol+'quarterlyKeyMetrics.json', 'r') as read_file:
         quarterlyData = json.load(read_file) #quarterlyData[0] is most recent
