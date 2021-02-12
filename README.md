@@ -65,6 +65,10 @@ Because the rec, ppe, and ltd mean/m metrics can be confusing, it is possible to
 
 This script has need for improvements, both in quality of the code and scope of function. For now, it is useful for tracking metrics that I value most in evaluating a company's worthiness for investment.
 
+The option for doing historic analysis has been added, but there are a variety of issues. The goal is to perform the evaluation on data as if the analysis were being done at some point in the past, then compare the results to actual performance. This way, it can be seen if there is any real correlations between my evaluations and stock performance. Issues abound both in concept and in practice:
+	1) Survivorship bias. Performing historical analysis on the companies that are currently in the S&P500 is useless, since these companies have performed well regardless of their status 10 years ago.
+	2) Available data. I recently discover that BIIB was getting a good historical evaluation because the EPS data was taken from the late 90's while debt and ticker price were from the early 90's. I need to clean up the data OR (preferably) re-write the script to use dates rather than list indexes.
+
 GetSP500.py
 ====================
 Accepts user input for a date in the past, then finds what the S&P500 components on that date were. This script is poorly designed and still in its infancy, but I needed a quick-fix for getting old S&P500 tickers. These will be useful for avoiding survivorship bias in evaluations; companies currently in the S&P500 will obviously have performed well regardless of their historic analysis (using --historic flag of CreateEvaluations.py) -- that is why they are in the index. What we really want is to do a historic analysis on the tickers that used to be in the index.

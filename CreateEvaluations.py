@@ -231,6 +231,10 @@ for symbol in symbols:
     analysis.append(rating)
     if (historicAnalysis):      
         data_df = yf.download(tickers=symbol, start=annualData[0]['date'], rounding='True', actions=True)
+        if (data_df.empty):
+            badDataMessage("Ticker History", symbol)
+            skipped.append(symbol)
+            continue
         twelvemonthLow = min(data_df['Close'][:300]) #What was the cheapest you could buy the security around this time?
         tenyrlater = data_df['Close'][min(3000, len(data_df)-1)] #What was the security's price 10yrs later (or last available quote)
         analysis.append(twelvemonthLow)
