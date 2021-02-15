@@ -5,6 +5,7 @@ import statistics as stats
 import os
 import sys, getopt
 import yfinance as yf
+from datetime import datetime
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 path = os.path.dirname(os.path.realpath(__file__))+'/'
 file=''
@@ -13,7 +14,7 @@ historicAnalysis=False
 
 #Read CL arguments
 try:
-    opts, args = getopt.gnu_getopt(sys.argv[1:], 'hi:p:o:H')
+    opts, args = getopt.gnu_getopt(sys.argv[1:], 'hi:p:o:H:')
 except getopt.GetoptError as err:
     print(str(err))
     print('SymbolPerformance.py -h for usage')
@@ -34,7 +35,8 @@ for opt, arg in opts:
         sys.stdout = open(outfile, 'w')
     elif opt in ('-H', "--historic"):
         historicAnalysis = True
-        historicString = '_Historic'
+        historicString = '_'+arg
+        historicDate = datetime.strptime(arg, "%Y-%m-%d")
 if (file==''):
     print('Must have input file. See SymbolPerformance.py -h for usage')
     sys.exit(2)
@@ -78,7 +80,9 @@ for symbol in symbols:
     with open(path+symbol+'quarterlyKeyMetrics.json', 'r') as read_file:
         quarterlyData = json.load(read_file) #quarterlyData[0] is most recent
         if (historicAnalysis):
-            quarterlyData = quarterlyData[-10:] #If doing historic analysis, use first 10 years available
+            #If doing historic analysis, only use data before chosen date
+            quarterlyData = [obj for obj in quarterlyData
+                             if datetime.strptime(obj['date'], '%Y-%m-%d') <= historicDate]
         numQuarters = min(len(quarterlyData), 10) #Use at most last 10 quarters of data
         quarterly = {}
         RANGE = range(numQuarters-1,-1,-1) #We want our list to end in the present, but quarterlyData[0] is most recent.
@@ -100,7 +104,9 @@ for symbol in symbols:
     with open(path+symbol+'annualKeyMetrics.json', 'r') as read_file:
         annualData = json.load(read_file)
         if (historicAnalysis):
-            annualData = annualData[-10:]
+            #If doing historic analysis, only use data before chosen date
+            annualData = [obj for obj in annualData
+                             if datetime.strptime(obj['date'], '%Y-%m-%d') <= historicDate]
         numYears = min(10, len(annualData)) #User at most last 10 years of data
         RANGE = range(numYears-1,-1,-1)
         annual = {}
@@ -116,7 +122,9 @@ for symbol in symbols:
     with open(path+symbol+'quarterlyBalanceSheet.json', 'r') as read_file:
         quarterlyData = json.load(read_file)
         if (historicAnalysis):
-            quarterlyData = quarterlyData[-10:]
+            #If doing historic analysis, only use data before chosen date
+            quarterlyData = [obj for obj in quarterlyData
+                             if datetime.strptime(obj['date'], '%Y-%m-%d') <= historicDate]
         numQuarters = min(10, len(quarterlyData))
         RANGE = range(numQuarters-1,-1,-1)
         quarterly = {}
@@ -146,7 +154,9 @@ for symbol in symbols:
     with open(path+symbol+'annualBalanceSheet.json', 'r') as read_file:
         annualData = json.load(read_file)
         if (historicAnalysis):
-            annualData = annualData[-10:]
+            #If doing historic analysis, only use data before chosen date
+            annualData = [obj for obj in annualData
+                             if datetime.strptime(obj['date'], '%Y-%m-%d') <= historicDate]
         numYears = min(10, len(annualData))
         RANGE = range(numYears-1,-1,-1)
         annual = {}
