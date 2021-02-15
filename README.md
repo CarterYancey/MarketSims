@@ -72,3 +72,4 @@ The option for doing historic analysis has been added, but there are a variety o
 GetSP500.py
 ====================
 Accepts user input for a date in the past, then finds what the S&P500 components on that date were. This script is poorly designed and still in its infancy, but I needed a quick-fix for getting old S&P500 tickers. These will be useful for avoiding survivorship bias in evaluations; companies currently in the S&P500 will obviously have performed well regardless of their historic analysis (using --historic flag of CreateEvaluations.py) -- that is why they are in the index. What we really want is to do a historic analysis on the tickers that used to be in the index.
+Constituent data was gathered and combined from Wikipedia and https://github.com/leosmigel/analyzingalpha/blob/master/sp500-historical-components-and-changes/sp500_history.csv. 
