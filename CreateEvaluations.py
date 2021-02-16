@@ -62,6 +62,7 @@ print("\tmean/m: Essentially, how many years until the mean is reached from the 
 print("\t        For LTD, we want a negative number close to 0 or a positve number much greater than 0. For Net Receivables, the opposite.")
 
 for symbol in symbols:
+    print(symbol)
     #Load data and create relevant variables
     with open(path+symbol+'profile.json', 'r') as read_file:
         profile = json.load(read_file)
@@ -76,7 +77,7 @@ for symbol in symbols:
             badDataMessage("Price", symbol)
             continue
         description = str(profile[0]['description']) if ('description' in profile[0]) else "[n/a]"
-        dividend = profile[0]['lastDiv']/price*100 if ('lastDiv' in profile[0]) else 0
+        #dividend = profile[0]['lastDiv']/price*100 if ('lastDiv' in profile[0]) else 0
     with open(path+symbol+'quarterlyKeyMetrics.json', 'r') as read_file:
         quarterlyData = json.load(read_file) #quarterlyData[0] is most recent
         if (historicAnalysis):
@@ -107,6 +108,10 @@ for symbol in symbols:
             #If doing historic analysis, only use data before chosen date
             annualData = [obj for obj in annualData
                              if datetime.strptime(obj['date'], '%Y-%m-%d') <= historicDate]
+        try:
+            dividend = annualData[0]['dividendYield']*100 if ('dividendYield' in annualData[0]) else 0
+        except:
+            dividend = 0
         numYears = min(10, len(annualData)) #User at most last 10 years of data
         RANGE = range(numYears-1,-1,-1)
         annual = {}
@@ -212,23 +217,25 @@ for symbol in symbols:
         badDataMessage("Annual", symbol)
         skipped.append(symbol)
         continue
-    analysis.append(round((2/3)*bvPerShare, 4))
-    analysis.append(round((2/3)*bvPerShare + 10*annualEPS, 4))
-    analysis.append(round((2/3)*bvPerShare + 20*annualEPS, 4))
+    analysis.append(round(bvPerShare, 4))
+    analysis.append(round((2/3)*bvPerShare + 15*annualEPS, 4))
+    analysis.append(round((2/3)*bvPerShare + 30*annualEPS, 4))
     annualLTDgrowth = annualResults['longTermDebt'][3]
     annualPPEgrowth = annualResults['propertyPlantEquipmentNet'][3]
     annualRECgrowth = annualResults['netReceivables'][3]
     rating = 0
     if (STDoverCASH < 4):
         rating +=1
-    if (LTDoverREC < 7):
-        rating +=2
-    if (dividend > 2.5):
-        rating +=0.5
+    if (LTDoverREC < 4):
+        rating +=1
+    if (LTDoverREC < 2):
+        rating +=1
+    if (dividend > 3.3):
+        rating +=1
     if (annualLTDgrowth < 0 and annualLTDgrowth > -10): 
         rating +=1
-        if (annualLTDgrowth > -5 and LTDoverREC > 5): #Paying off debt fast is easy when you don't have much
-            rating +=1
+        if (annualLTDgrowth > -5 and LTDoverREC < 2): #Paying off debt fast is easy when you don't have much
+            rating -=0.5
     if (annualLTDgrowth >= 0):
         if ((annualLTDgrowth > annualRECgrowth) and (annualRECgrowth > 0)):
             rating+=0.5
