@@ -22,9 +22,9 @@ except getopt.GetoptError as err:
 for opt, arg in opts:
     if opt in("-h", "--help"):
         print(' -i <input file> \t Filename of file that contains list of symbols seperated by newlines. Must be in same directory as this script, unless the -p flag is used.')
-        print(' -p, --path=<directory> \t Directory for this script to work in. Working directory by default.')
+        print(' -p <path to directory> \t Directory for this script to work in. Working directory by default.')
         print(' -o <outfile> \t Filename of a file that will be written to rather than stdout. This only affects what is normally printed to the terminal.')
-        print(' -H, --historic \t Perform analysis using oldest data available, as if you were using this script in the past. Helpful for determining efficacy of this script. BEWARE SURVIVORSHIP BIAS!')
+        print(' -H <%Y-%m-%d> \t Perform analysis using oldest data available, as if you were using this script in the past. Helpful for determining efficacy of this script. BEWARE SURVIVORSHIP BIAS!')
         sys.exit(2)
     elif opt in ('-i', "--infile"):
         file = arg
@@ -253,8 +253,10 @@ for symbol in symbols:
             skipped.append(symbol)
             continue
         twelvemonthLow = min(data_df['Close'][:300]) #What was the cheapest you could buy the security around this time?
-        tenyrlater = data_df['Close'][min(3000, len(data_df)-1)] #What was the security's price 10yrs later (or last available quote)
+        fiveyrlater = data_df['Close'][min(1250, len(data_df)-1)] #What was the security's price 5yrs later (or last available quote)
+        tenyrlater = data_df['Close'][min(2500, len(data_df)-1)] #What was the security's price 10yrs later (or last available quote)
         analysis.append(twelvemonthLow)
+        analysis.append(fiveyrlater)
         analysis.append(tenyrlater)
         analysis.append(price)
         analysis.append(annualData[0]['date'])
@@ -273,7 +275,7 @@ tablecolumns = ["STD/Cash", "LTDoverREC", "dividend",
                 "Estimate1", "Estimate2", "Estimate3",
                 "Rating", "Price"]
 if (historicAnalysis):
-    tablecolumns += ["10yrlatr", "Today", "LastDate"]
+    tablecolumns += ["5yrlater", "10yrlater", "Today", "LastDate"]
 results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablecolumns)
 print(results)
 name=file.split('.')[0]
