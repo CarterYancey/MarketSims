@@ -6,6 +6,7 @@ import os
 import sys, getopt
 import yfinance as yf
 from datetime import datetime
+import math
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 path = os.path.dirname(os.path.realpath(__file__))+'/'
 file=''
@@ -200,18 +201,14 @@ for symbol in symbols:
             annualVars[metric] = stats.variance(annual[metric][-a_length:])
         annualResults = {}
         for metric in metrics:
+            print(slope[metric])
             annualResults[metric] = [slope[metric], intercept[metric], annualMeans[metric], annualMeans[metric]/slope[metric], annualVars[metric]**0.5]
         print("\t\tm \t c \t mean \t mean/m \t mean/StdDev")
         for metric in metrics:
             print(metric + ": ", list(map(sciNot.format, annualResults[metric])))
         print('\n')
         for metric in metrics:
-            try:
-                #Mean/variance gives an idea of how suddenly large changes are occurring
-                #Ex, taking out debt gradually or a lot suddenly
-                analysis.append(round(annualResults[metric][2]/annualResults[metric][4], 4))
-            except ZeroDivisionError:
-                analysis.append('nan')
+            annualResults[metric][3] = 0 if (np.isnan(annualResults[metric][3])) else annualResults[metric][3]
             analysis.append(round(annualResults[metric][3], 4))
     else:
         badDataMessage("Annual", symbol)
@@ -230,7 +227,7 @@ for symbol in symbols:
         rating +=1
     if (LTDoverREC < 2):
         rating +=1
-    if (dividend > 3.3):
+    if (dividend > 3):
         rating +=1
     if (annualLTDgrowth < 0 and annualLTDgrowth > -10): 
         rating +=1
@@ -254,10 +251,14 @@ for symbol in symbols:
             continue
         twelvemonthLow = min(data_df['Close'][:300]) #What was the cheapest you could buy the security around this time?
         fiveyrlater = data_df['Close'][min(1250, len(data_df)-1)] #What was the security's price 5yrs later (or last available quote)
+        fiveyrDivid = sum(data_df['Dividends'][:min(1250, len(data_df)-1)])
         tenyrlater = data_df['Close'][min(2500, len(data_df)-1)] #What was the security's price 10yrs later (or last available quote)
+        tenyrDivid = sum(data_df['Dividends'][:min(2500, len(data_df)-1)])
         analysis.append(twelvemonthLow)
         analysis.append(fiveyrlater)
+        analysis.append(fiveyrlater+fiveyrDivid)
         analysis.append(tenyrlater)
+        analysis.append(tenyrlater+tenyrDivid)
         analysis.append(price)
         analysis.append(annualData[0]['date'])
     else:
@@ -269,13 +270,11 @@ for message in badMessages:
 print("Skipped: ",skipped)
 tablecolumns = ["STD/Cash", "LTDoverREC", "dividend",
                 "BV/share", "annualEPS", "quarterlyEPS",
-                "rec mean/stdDev", "rec mean/m",
-                "ppe mean/stdDev", "ppe mean/m",
-                "ltd mean/stdDev", "ltd mean/m",
+                "rec mean/m","ppe mean/m", "ltd mean/m",
                 "Estimate1", "Estimate2", "Estimate3",
                 "Rating", "Price"]
 if (historicAnalysis):
-    tablecolumns += ["5yrlater", "10yrlater", "Today", "LastDate"]
+    tablecolumns += ["5yrlater", "withDivs", "10yrlater", "withDivs", "Today", "LastDate"]
 results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablecolumns)
 print(results)
 name=file.split('.')[0]
