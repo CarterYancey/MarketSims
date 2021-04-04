@@ -25,7 +25,7 @@ for opt, arg in opts:
         print(' -i <input file> \t Filename of file that contains list of symbols seperated by newlines. Must be in same directory as this script, unless the -p flag is used.')
         print(' -p <path to directory> \t Directory for this script to work in. Working directory by default.')
         print(' -o <outfile> \t Filename of a file that will be written to rather than stdout. This only affects what is normally printed to the terminal.')
-        print(' -H <%Y-%m-%d> \t Perform analysis using oldest data available, as if you were using this script in the past. Helpful for determining efficacy of this script. BEWARE SURVIVORSHIP BIAS!')
+        print(' -H <%Y-%m-%d> \t Perform analysis as if you were running this script on said date. Helpful for determining efficacy of this analysis. BEWARE SURVIVORSHIP BIAS!')
         sys.exit(2)
     elif opt in ('-i', "--infile"):
         file = arg
@@ -78,6 +78,8 @@ for symbol in symbols:
             badDataMessage("Price", symbol)
             continue
         description = str(profile[0]['description']) if ('description' in profile[0]) else "[n/a]"
+        industry = str(profile[0]['industry']) if ('industry' in profile[0]) else "[n/a]"
+        sector = str(profile[0]['sector']) if ('sector' in profile[0]) else "[n/a]"
         #dividend = profile[0]['lastDiv']/price*100 if ('lastDiv' in profile[0]) else 0
     with open(path+symbol+'quarterlyKeyMetrics.json', 'r') as read_file:
         quarterlyData = json.load(read_file) #quarterlyData[0] is most recent
@@ -176,8 +178,8 @@ for symbol in symbols:
                                  index=['cash', 'shortTermDebt','netReceivables',
                                         'PPE', 'longTermDebt'])
     #Begin Analysis
-    analysis=[STDoverCASH, LTDoverREC, dividend, bvPerShare, annualEPS, quarterlyEPS]
-    analysis = [round(n, 4) for n in analysis]
+    analysis=[industry, sector, STDoverCASH, LTDoverREC, dividend, bvPerShare, annualEPS, quarterlyEPS]
+    analysis[2:] = [round(n, 4) for n in analysis[2:]]
     #DisplayData
     print(description[:60])
     print(quarterly_df)
@@ -268,13 +270,14 @@ for symbol in symbols:
 for message in badMessages:
     print(message)
 print("Skipped: ",skipped)
-tablecolumns = ["STD/Cash", "LTDoverREC", "dividend",
+tablecolumns = ["Industry", "Sector",
+                "STD/Cash", "LTDoverREC", "dividend",
                 "BV/share", "annualEPS", "quarterlyEPS",
                 "rec mean/m","ppe mean/m", "ltd mean/m",
                 "Estimate1", "Estimate2", "Estimate3",
                 "Rating", "Price"]
 if (historicAnalysis):
-    tablecolumns += ["5yrlater", "withDivs", "10yrlater", "withDivs", "Today", "LastDate"]
+    tablecolumns += ["5yrlater", "5yr+Divs", "10yrlater", "10yr+Divs", "Today", "LastDate"]
 results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablecolumns)
 print(results)
 name=file.split('.')[0]
