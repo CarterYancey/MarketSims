@@ -262,7 +262,8 @@ for symbol in symbols:
         analysis.append(tenyrlater)
         analysis.append(tenyrlater+tenyrDivid)
         analysis.append(price)
-        analysis.append(annualData[0]['date'])
+        #analysis.append(annualData[0]['date'])
+        analysis = [annualData[0]['date']] + analysis
     else:
         analysis.append(price)
     symbol_analysis[symbol] = analysis
@@ -277,7 +278,8 @@ tablecolumns = ["Industry", "Sector",
                 "Estimate1", "Estimate2", "Estimate3",
                 "Rating", "Price"]
 if (historicAnalysis):
-    tablecolumns += ["5yrlater", "5yr+Divs", "10yrlater", "10yr+Divs", "Today", "LastDate"]
+    tablecolumns = ["LastDate"] + tablecolumns
+    tablecolumns += ["5yrlater", "5yr+Divs", "10yrlater", "10yr+Divs", "Today"]
 results = pd.DataFrame.from_dict(symbol_analysis, orient='index', columns=tablecolumns)
 print(results)
 name=file.split('.')[0]
