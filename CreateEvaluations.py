@@ -51,8 +51,8 @@ sciNot='{:.2E}' #Scientific Notation
 
 #Record and display error when missing crucial data points
 badMessages = []
-def badDataMessage(data, symbol):
-    messageStr = ("***INSUFFICIENT "+data+" DATA FOR ANALYSIS of "+symbol+" ***\n")
+def badDataMessage(message, symbol):
+    messageStr = ("***"+message+" FOR ANALYSIS of "+symbol+" ***\n")
     print(messageStr)
     badMessages.append(messageStr)
     
@@ -71,11 +71,11 @@ for symbol in symbols:
             price = profile[0]['price']
         except (IndexError, KeyError):
             skipped.append(symbol)
-            badDataMessage("Profile", symbol)
+            badDataMessage("FATAL: Insufficient Profile Data", symbol)
             continue
         if (price == 0):
             skipped.append(symbol)
-            badDataMessage("Price", symbol)
+            badDataMessage("FATAL: Insufficient Price Data", symbol)
             continue
         description = str(profile[0]['description']) if ('description' in profile[0]) else "[n/a]"
         industry = str(profile[0]['industry']) if ('industry' in profile[0]) else "[n/a]"
@@ -96,13 +96,13 @@ for symbol in symbols:
         try:
             bvPerShare = stats.mean(quarterly['bookValuePerShare'][-4:])
         except:
-            badDataMessage("quarterly BV/share", symbol)
+            badDataMessage("Insufficient quarterly BV/share Data", symbol)
             bvPerShare = 0
             #THIS NEEDS DRAMATIC IMPROVEMENT BUT IT IS ALMOST BEDTIME
         try:
             quarterlyEPS = stats.mean(quarterly['netIncomePerShare'][-4:])
         except:
-            badDataMessage("quarterly EPS", symbol)
+            badDataMessage("Insufficient quarterly EPS data", symbol)
             quarterlyEPS = 0
             #THIS NEEDS DRAMATIC IMPROVEMENT BUT IT IS ALMOST BEDTIME
     with open(path+symbol+'annualKeyMetrics.json', 'r') as read_file:
@@ -123,7 +123,7 @@ for symbol in symbols:
         try:
             annualEPS = stats.mean(annual['netIncomePerShare'][-3:])
         except:
-            badDataMessage("annual EPS", symbol)
+            badDataMessage("Insufficient annual EPS", symbol)
             annualEPS = 0
             #THIS NEEDS DRAMATIC IMPROVEMENT BUT IT IS ALMOST BEDTIME
     #Source quarterly Balance Sheet Data
@@ -147,7 +147,7 @@ for symbol in symbols:
         except ZeroDivisionError:
             STDoverCASH = maxInt
         except stats.StatisticsError:
-            badDataMessage("Quarterly STD", symbol)
+            badDataMessage("FATAL: Insufficient Quarterly STD data", symbol)
             skipped.append(symbol)
             continue
         try:
@@ -155,7 +155,7 @@ for symbol in symbols:
         except ZeroDivisionError:
             LTDoverREC = maxInt
         except stats.StatisticsError:
-            badDataMessage("Quarterly LTD", symbol)
+            badDataMessage("FATAL: Insufficient Quarterly LTD data", symbol)
             skipped.append(symbol)
             continue
     #Source annual Balance Sheet Data
@@ -213,7 +213,7 @@ for symbol in symbols:
             annualResults[metric][3] = 0 if (np.isnan(annualResults[metric][3])) else annualResults[metric][3]
             analysis.append(round(annualResults[metric][3], 4))
     else:
-        badDataMessage("Annual", symbol)
+        badDataMessage("FATAL: Insufficient Annual data", symbol)
         skipped.append(symbol)
         continue
     analysis.append(round(bvPerShare, 4))
@@ -246,9 +246,18 @@ for symbol in symbols:
         rating +=2   
     analysis.append(rating)
     if (historicAnalysis):      
-        data_df = yf.download(tickers=symbol, start=annualData[0]['date'], rounding='True', actions=True)
+        # Ideally, we would tream yf data like FMP data; assume it is already downloaded
+        # But this is easier. Perhaps in the future, we can set a flag for this script;
+        # -D : 'download data on the fly'
+        # Then even FMP could be gathered without having it predownloaded on local machine
+        try:
+            data_df = yf.download(tickers=symbol, start=annualData[0]['date'], rounding='True', actions=True)
+        except:
+            badDataMessage("FATAL: Yahoo Bad", symbol)
+            skipped.append(symbol)
+            continue
         if (data_df.empty):
-            badDataMessage("Ticker History", symbol)
+            badDataMessage("FATAL: Insufficient Ticker History", symbol)
             skipped.append(symbol)
             continue
         twelvemonthLow = min(data_df['Close'][:300]) #What was the cheapest you could buy the security around this time?

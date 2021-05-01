@@ -17,4 +17,4 @@ for x in range(len(date)):
         print("Adding: " + (date['Ticker'][x]))
         SP500 = SP500.append({'Symbol': date['Ticker'][x]}, ignore_index=True)
 print(SP500)
-SP500.to_csv('S&P500_'+str(year)+'-'+str(month)+'-'+str(day)+'.csv', index=False)
+SP500.to_csv('S&P500_'+str(year)+'-'+str(month)+'-'+str(day)+'.csv', header=False, index=False)
