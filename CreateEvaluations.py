@@ -223,14 +223,14 @@ for symbol in symbols:
     annualPPEgrowth = annualResults['propertyPlantEquipmentNet'][3]
     annualRECgrowth = annualResults['netReceivables'][3]
     rating = 0
-    if (STDoverCASH < 4):
+    if (STDoverCASH < 1):
         rating +=1
-    if (LTDoverREC < 4):
+    if (LTDoverREC < 3):
         rating +=1
-    if (LTDoverREC < 2):
+    if (LTDoverREC < 1):
         rating +=1
     if (dividend > 3):
-        rating +=1
+        rating +=(dividend-3)/2
     if (annualLTDgrowth < 0 and annualLTDgrowth > -10): 
         rating +=1
         if (annualLTDgrowth > -5 and LTDoverREC < 2): #Paying off debt fast is easy when you don't have much
