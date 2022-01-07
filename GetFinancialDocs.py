@@ -50,6 +50,8 @@ def main(argv):
         get_keyMetrics(symbol)
         print("Getting Income Statement for " + symbol)
         get_incomeStatement(symbol)
+        print("Getting Cashflow Statement for " + symbol)
+        get_incomeStatement(symbol)
 
 def get_jsonparsed_data(url):
     """
@@ -118,6 +120,16 @@ def get_incomeStatement(symbol):
     with open(path+symbol+'annualIncomeStatement.json', 'w') as outfile:
         json.dump(annual_json, outfile)
     with open(path+symbol+'quarterlyIncomeStatement.json', 'w') as outfile:
+        json.dump(quarterly_json, outfile)
+
+def get_cashflowStatement(symbol):
+    annual = ("https://financialmodelingprep.com/api/v3/cash-flow-statement/"+symbol+"?limit=120&apikey="+apikey)
+    quarterly = ("https://financialmodelingprep.com/api/v3/cash-flow-statement/"+symbol+"?period=quarter&limit=120&apikey="+apikey)
+    annual_json = get_jsonparsed_data(annual)
+    quarterly_json = get_jsonparsed_data(quarterly)
+    with open(path+symbol+'annualCashflowStatement.json', 'w') as outfile:
+        json.dump(annual_json, outfile)
+    with open(path+symbol+'quarterlyCashflowStatement.json', 'w') as outfile:
         json.dump(quarterly_json, outfile)
 
 if __name__ == "__main__":
