@@ -51,7 +51,7 @@ def main(argv):
         print("Getting Income Statement for " + symbol)
         get_incomeStatement(symbol)
         print("Getting Cashflow Statement for " + symbol)
-        get_incomeStatement(symbol)
+        get_cashflowStatement(symbol)
 
 def get_jsonparsed_data(url):
     """
