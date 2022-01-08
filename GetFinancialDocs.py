@@ -2,6 +2,8 @@
 import os
 import sys, getopt
 import json
+import multiprocessing
+from multiprocessing.pool import ThreadPool
 
 # For Python 3.0 and later
 from urllib.request import urlopen
@@ -39,19 +41,21 @@ def main(argv):
         print('Must have input file and API key. See GetFinancialDocs.py -h for usage')
         sys.exit(2)   
     symbols = [line.rstrip('\n') for line in open(path+infile)]
-    for symbol in symbols:
-        print("Getting balance sheet for " + symbol)
-        get_balanceSheet(symbol)
-        print("Getting profile for " + symbol)
-        get_profile(symbol)
-        #print("Getting ttmRatios for " + symbol)
-        #get_ttmRatios(symbol)
-        print("Getting Key Metrics for " + symbol)
-        get_keyMetrics(symbol)
-        print("Getting Income Statement for " + symbol)
-        get_incomeStatement(symbol)
-        print("Getting Cashflow Statement for " + symbol)
-        get_cashflowStatement(symbol)
+    ThreadPool(4).imap_unordered(get_all, symbols)
+
+def get_all(symbol):
+    print("Getting balance sheet for " + symbol)
+    get_balanceSheet(symbol)
+    print("Getting profile for " + symbol)
+    get_profile(symbol)
+    #print("Getting ttmRatios for " + symbol)
+    #get_ttmRatios(symbol)
+    print("Getting Key Metrics for " + symbol)
+    get_keyMetrics(symbol)
+    print("Getting Income Statement for " + symbol)
+    get_incomeStatement(symbol)
+    print("Getting Cashflow Statement for " + symbol)
+    get_cashflowStatement(symbol)
 
 def get_jsonparsed_data(url):
     """
