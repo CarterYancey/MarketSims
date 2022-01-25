@@ -68,11 +68,14 @@ for symbol in symbols:
     with open(path+symbol+'profile.json', 'r') as read_file:
         profile = json.load(read_file)
         try:
-            price = profile[0]['price']
-        except (IndexError, KeyError):
-            skipped.append(symbol)
-            badDataMessage("FATAL: Insufficient Profile Data", symbol)
-            continue
+            price = yf.download(symbol, period='1d', rounding='True')['Close'][0]
+        except:
+            try:
+                price = profile[0]['price']
+            except (IndexError, KeyError):
+                skipped.append(symbol)
+                badDataMessage("FATAL: Insufficient Profile Data", symbol)
+                continue
         if (price == 0):
             skipped.append(symbol)
             badDataMessage("FATAL: Insufficient Price Data", symbol)
